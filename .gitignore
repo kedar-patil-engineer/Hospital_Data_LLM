@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.env
+
+# Logs (ignore all except structure)
+logs/*
+!logs/raw/
+!logs/raw/.gitkeep
+
+# Database
+db/*.duckdb
+
+# Data
+data/raw/
+
+# IDE
+.idea/
+.vscode/

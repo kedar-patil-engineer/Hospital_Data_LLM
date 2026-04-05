@@ -1,0 +1,139 @@
+# config/field_dict.yaml
+#
+# Human-readable descriptions for every column in the hospital DuckDB dataset.
+# Used by explain_field() in agent/etl_agent.py.
+#
+# Format:  "table.column": "description"
+#
+# Maintainable without touching Python code — just edit this file.
+# Covers all 9 tables: claims_and_billing, denials, diagnoses, encounters,
+# lab_tests, medications, patients, procedures, providers.
+
+# ---------------------------------------------------------------------------
+# claims_and_billing (11 columns)
+# ---------------------------------------------------------------------------
+claims_and_billing.billing_id:        "Unique identifier for each billing record."
+claims_and_billing.patient_id:        "Patient identifier — links to patients table."
+claims_and_billing.encounter_id:      "Encounter identifier — links to encounters table."
+claims_and_billing.insurance_provider: "Name of the insurance company responsible for payment (e.g. BCBS, Aetna)."
+claims_and_billing.payment_method:    "Method of payment — Insurance, Self-Pay, Medicare, Medicaid, etc."
+claims_and_billing.claim_id:          "Unique claim identifier submitted to the payer — links to denials table."
+claims_and_billing.claim_billing_date: "Date and time the claim was submitted for billing (DD-MM-YYYY HH:MM format)."
+claims_and_billing.billed_amount:     "Total amount billed to the payer for services rendered."
+claims_and_billing.paid_amount:       "Amount actually paid by the payer. Should never exceed billed_amount."
+claims_and_billing.claim_status:      "Current status of the claim: Paid, Denied, Pending, or Partially Paid."
+claims_and_billing.denial_reason:     "Reason the claim was denied, if applicable (e.g. 'Claim Billed to Wrong Payer')."
+
+# ---------------------------------------------------------------------------
+# denials (10 columns)
+# ---------------------------------------------------------------------------
+denials.claim_id:                     "Claim identifier — links to claims_and_billing.claim_id."
+denials.denial_id:                    "Unique identifier for each denial record."
+denials.denial_reason_code:           "Short code identifying the denial category (e.g. CO-4, PR-96)."
+denials.denial_reason_description:    "Full text description of why the claim was denied."
+denials.denied_amount:                "Dollar amount that was denied by the payer."
+denials.denial_date:                  "Date the denial was issued by the payer."
+denials.appeal_filed:                 "Boolean flag — whether a formal appeal was submitted for this denial."
+denials.appeal_status:                "Current status of the appeal: Pending, Won, Lost, or Not Filed."
+denials.appeal_resolution_date:       "Date the appeal was resolved (won or lost)."
+denials.final_outcome:                "Final outcome of the claim after appeal: Paid, Written Off, etc."
+
+# ---------------------------------------------------------------------------
+# diagnoses (6 columns)
+# ---------------------------------------------------------------------------
+diagnoses.diagnosis_id:               "Unique identifier for each diagnosis record."
+diagnoses.encounter_id:               "Encounter identifier — links to encounters table."
+diagnoses.diagnosis_code:             "ICD-10-CM code for the diagnosis (e.g. J45.909 for asthma, E11.9 for type 2 diabetes)."
+diagnoses.diagnosis_description:      "Human-readable description of the ICD-10 diagnosis code."
+diagnoses.primary_flag:               "Boolean — True if this is the primary diagnosis for the encounter."
+diagnoses.chronic_flag:               "Boolean — True if this is a chronic/ongoing condition for the patient."
+
+# ---------------------------------------------------------------------------
+# encounters (13 columns)
+# ---------------------------------------------------------------------------
+encounters.encounter_id:              "Unique identifier for each patient visit or hospital encounter."
+encounters.patient_id:                "Patient identifier — links to patients table."
+encounters.provider_id:               "Provider identifier — links to providers table."
+encounters.visit_date:                "Date the patient visited or was admitted (DD-MM-YYYY format)."
+encounters.visit_type:                "Type of visit: Inpatient, Outpatient, Emergency, Telemedicine, etc."
+encounters.department:                "Hospital department that handled the encounter (e.g. Cardiology, Oncology)."
+encounters.reason_for_visit:          "Free-text or coded reason the patient presented for care."
+encounters.diagnosis_code:            "Primary ICD-10-CM diagnosis code recorded at time of encounter."
+encounters.admission_type:            "How the patient was admitted: Elective, Emergency, Urgent, Newborn."
+encounters.discharge_date:            "Date the patient was discharged. Must not be before visit_date."
+encounters.length_of_stay:            "Number of days between admission and discharge. Derived from visit_date and discharge_date."
+encounters.status:                    "Current encounter status: Completed, Active, Cancelled."
+encounters.readmitted_flag:           "Boolean — True if patient was readmitted within 30 days of a prior discharge."
+
+# ---------------------------------------------------------------------------
+# lab_tests (10 columns)
+# ---------------------------------------------------------------------------
+lab_tests.lab_id:                     "Unique identifier for each lab test record."
+lab_tests.encounter_id:               "Encounter identifier — links to encounters table."
+lab_tests.test_name:                  "Full name of the laboratory test (e.g. Complete Blood Count, HbA1c)."
+lab_tests.test_code:                  "Standardised test code — typically LOINC or CPT (e.g. CBC, CMP, TSH)."
+lab_tests.specimen_type:              "Type of specimen collected: Blood, Urine, Swab, Tissue, etc."
+lab_tests.test_result:                "Measured result value of the lab test."
+lab_tests.units:                      "Unit of measurement for the result (e.g. mg/dL, mmol/L, %)."
+lab_tests.normal_range:               "Reference range for the test result indicating normal values."
+lab_tests.test_date:                  "Date the lab test was performed."
+lab_tests.status:                     "Status of the test result: Final, Preliminary, Pending, Cancelled."
+
+# ---------------------------------------------------------------------------
+# medications (10 columns)
+# ---------------------------------------------------------------------------
+medications.medication_id:            "Unique identifier for each medication record."
+medications.encounter_id:             "Encounter identifier — links to encounters table."
+medications.drug_name:                "Generic or brand name of the prescribed medication."
+medications.dosage:                   "Prescribed dose amount and unit (e.g. 500mg, 10mcg)."
+medications.route:                    "Route of administration: Oral, IV, Topical, Subcutaneous, etc."
+medications.frequency:                "How often the medication is taken (e.g. Once daily, Twice daily, PRN)."
+medications.duration:                 "Prescribed duration of the medication course (e.g. 7 days, 30 days)."
+medications.prescribed_date:          "Date the medication was prescribed."
+medications.prescriber_id:            "Provider identifier of the prescribing clinician — links to providers table."
+medications.cost:                     "Cost of the medication at time of prescribing."
+
+# ---------------------------------------------------------------------------
+# patients (16 columns)
+# ---------------------------------------------------------------------------
+patients.patient_id:                  "Primary patient identifier — referenced across encounters, claims, and diagnoses."
+patients.first_name:                  "Patient's legal first name."
+patients.last_name:                   "Patient's legal last name."
+patients.dob:                         "Patient's date of birth in DD-MM-YYYY format. Used to derive age."
+patients.age:                         "Patient's recorded age in years at time of registration. Should align with dob."
+patients.gender:                      "Patient's recorded gender. FHIR-compliant values: male, female, other, unknown."
+patients.ethnicity:                   "Patient's self-reported ethnicity."
+patients.insurance_type:              "Primary insurance type: Commercial, Medicare, Medicaid, Self-Pay, etc."
+patients.marital_status:              "Patient's marital status: Single, Married, Divorced, Widowed."
+patients.address:                     "Street address of the patient's primary residence."
+patients.city:                        "City of the patient's primary residence."
+patients.state:                       "US state of the patient's primary residence."
+patients.zip:                         "ZIP code of the patient's primary residence."
+patients.phone:                       "Patient's contact phone number."
+patients.email:                       "Patient's contact email address."
+patients.registration_date:           "Date the patient was registered in the hospital system."
+
+# ---------------------------------------------------------------------------
+# procedures (7 columns)
+# ---------------------------------------------------------------------------
+procedures.procedure_id:              "Unique identifier for each procedure record."
+procedures.encounter_id:              "Encounter identifier — links to encounters table."
+procedures.procedure_code:            "CPT (Current Procedural Terminology) code for the procedure (4–5 digits, e.g. 99213, 71046)."
+procedures.procedure_description:     "Human-readable description of the CPT procedure code."
+procedures.procedure_date:            "Date the procedure was performed."
+procedures.provider_id:               "Provider who performed the procedure — links to providers table."
+procedures.procedure_cost:            "Billed cost of the procedure."
+
+# ---------------------------------------------------------------------------
+# providers (10 columns)
+# ---------------------------------------------------------------------------
+providers.provider_id:                "Unique identifier for each clinical provider."
+providers.name:                       "Full name of the provider (doctor, nurse practitioner, PA, etc.)."
+providers.department:                 "Department the provider primarily works in."
+providers.specialty:                  "Clinical specialty of the provider (e.g. Cardiology, Oncology, General Practice)."
+providers.npi:                        "National Provider Identifier — standardised 10-digit US provider ID."
+providers.inhouse:                    "Boolean — True if the provider is employed directly by the hospital."
+providers.location:                   "Physical location or campus where the provider is based."
+providers.years_experience:           "Number of years of clinical experience."
+providers.contact_info:               "Provider's contact details (phone or pager)."
+providers.email:                      "Provider's professional email address."
